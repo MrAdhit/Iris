@@ -64,9 +64,9 @@ public class Iris implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		FabricLoader.getInstance().getModContainer("sodium").ifPresent(
-				modContainer -> {
-					sodiumInstalled = true;
-					String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
+			modContainer -> {
+				sodiumInstalled = true;
+				String versionString = modContainer.getMetadata().getVersion().getFriendlyString();
 
 					// This makes it so that if we don't have the right version of Sodium, it will show the user a
 					// nice warning, and prevent them from playing the game with a wrong version of Sodium.

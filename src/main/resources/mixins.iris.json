@@ -19,6 +19,7 @@
     "MixinProgram",
     "MixinScreenEffectRenderer",
     "MixinGlStateManager",
+    "MixinItemInHandRenderer",
     "MixinGlStateManager_AtlasTracking",
     "MixinGlStateManager_BlendOverride",
     "MixinGlUniform",

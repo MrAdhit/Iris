@@ -1,12 +1,33 @@
 ![Iris: An open-source shaders mod compatible with OptiFine shaderpacks](docs/banner.png)
 
-# Iris
+# Iris Starline
+A fork of Iris focused on bringing fixes and features to the user faster and to provide a better in-game user experience. Currently, a major addition over normal iris is preliminary shaderpack config support, including an in-game gui to manage shader settings.
 
-## Links
+## How to download and install starline
+1. Log into or create a GitHub account if you don't already have one
+2. Click Actions at the top of the page or visit this link: https://github.com/HyperCubeMC/Iris/actions
+- Each action has a bold title, a commit id, a timestamp, and a blue branch name containing the version (e.g `1.17-starline`)
+3. Find the latest (closest to the top) action with a blue branch name containing the version you want to download, and click on the bold title next to it
+- If the branch name does not have a version before it, it is for 1.16
+4. At the bottom, there should be a text that says Artifacts, with a size next to it
+5. Click the bold text labeled "Artifacts" to download a zip containing the built starline jars
+- If you are unable to click it and nothing happens, you are not logged into a GitHub account and you need to login or create a new one
+6. Extract the zip by right-clicking it and pressing extract
+7. After it has been extracted, there should be 4 jars. Copy the one without -sources or -dev on the end, just -starline, a build number and .jar
+8. Remove normal iris from your mods folder (or iris-reserved folder, if you used the installer with use custom loader checked) and paste in the new starline jar
 
-* **Visit [our website](https://irisshaders.net) for downloads and pretty screenshots!**
-* Visit [our Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support! It's also a great place to get development updates right as they're happening.
-* Visit [my Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
+Starline specific info:
+
+## Starline Links
+* Hop on [my discord server](https://discord.gg/XsAddwQkXF) for further information and help with starline, as well as serving as a place to chill and game with friends and others!
+
+Non-starline specific part of the readme:
+
+## Original Links
+
+* Visit [the Iris website](https://irisshaders.net) for normal, non-starline downloads and pretty screenshots!
+* Visit [the Iris Discord server](https://discord.gg/jQJnav2jPu) to chat about the mod and get support (no starline support here, see above starline for that)! It's also a great place to get development updates right as they're happening.
+* Visit [the lead Iris developer's Patreon page](https://www.patreon.com/coderbot) to support the continued development of Iris!
 
 
 ## Why did you make Iris?

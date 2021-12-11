@@ -38,8 +38,12 @@ body:
       label: Iris and Minecraft Version
       description: What version of Iris are you running? Include the Minecraft version too. Every part is important! If you do not know what version you are using, look at the file name in your "mods" folder.
       placeholder: ex. iris-mc1.16.5-1.0.0.jar for Minecraft 1.16.5
-    validations:
-      required: true
+  - type: input
+    id: shaderpack
+    attributes:
+      label: Shaderpack Used
+      description: If this issue is specific to a certain shaderpack, please provide the name and version of the shaderpack used
+      placeholder: ex. Sildurs Vibrant Shaders v1.29 High
   - type: dropdown
     id: sodium
     attributes:

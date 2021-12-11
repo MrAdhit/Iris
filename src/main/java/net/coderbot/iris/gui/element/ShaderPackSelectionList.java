@@ -28,10 +28,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 	@Override
 	public int getRowWidth() {
-		// Temporarily set to only reach a width of up to 312 in order to fit in with
-		// the width of the array of buttons at the bottom of the GUI. May be changed
-		// in the future if this widget is made to occupy half the screen.
-		return Math.min(308, width - 50);
+		return width - 12;
 	}
 
 	@Override
@@ -77,6 +74,13 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		}
 
 		this.addEntry(new LabelEntry(PACK_LIST_LABEL));
+	}
+
+	@Override
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
+		super.render(poseStack, mouseX, mouseY, delta);
+		GuiUtil.drawCompactScrollBar(this.width - 2, this.y0 + 2, this.y1 - 2, this.getMaxScroll(), this.getScrollAmount(), this.getMaxPosition(), Math.max(0, Math.min(3, this.scrollbarFade + (hovered ? delta : -delta))) / 3);
+		this.hovered = this.isMouseOver(mouseX, mouseY);
 	}
 
 	public void addEntry(int index, String name) {
@@ -144,6 +148,8 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 
 			boolean shadersEnabled = list.getEnableShadersButton().enabled;
 
+			// For some reason, the method that getWidth uses ignores the style passed to it and uses the empty style
+			// TODO: Find a workaround for this
 			if (font.width(new TextComponent(name).withStyle(ChatFormatting.BOLD)) > this.list.getRowWidth() - 3) {
 				name = font.plainSubstrByWidth(name, this.list.getRowWidth() - 8) + "...";
 			}
@@ -207,7 +213,7 @@ public class ShaderPackSelectionList extends IrisObjectSelectionList<ShaderPackS
 		public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
 			GuiUtil.bindIrisWidgetsTexture();
 
-			GuiUtil.drawButton(poseStack, x - 2, y - 3, entryWidth, 18, hovered, false);
+			GuiUtil.drawButton(poseStack, x - 2, y - 3, entryWidth, 18, hovered, false, false);
 
 			Component label = this.enabled ? SHADERS_ENABLED_LABEL : SHADERS_DISABLED_LABEL;
 

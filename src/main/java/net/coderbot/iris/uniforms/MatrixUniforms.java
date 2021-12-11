@@ -28,9 +28,9 @@ public final class MatrixUniforms {
 
 	private static void addMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {
 		uniforms
-			.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
-			.uniformJomlMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
-			.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));
+				.uniformMatrix(PER_FRAME, "gbuffer" + name, supplier)
+				.uniformJomlMatrix(PER_FRAME, "gbuffer" + name + "Inverse", new Inverted(supplier))
+				.uniformMatrix(PER_FRAME, "gbufferPrevious" + name, new Previous(supplier));
 	}
 
 	private static void addShadowMatrix(UniformHolder uniforms, String name, Supplier<Matrix4f> supplier) {

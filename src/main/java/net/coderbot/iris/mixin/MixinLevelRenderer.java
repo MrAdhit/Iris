@@ -74,7 +74,7 @@ public class MixinLevelRenderer {
 		SystemTimeUniforms.COUNTER.beginFrame();
 		SystemTimeUniforms.TIMER.beginFrame(startTime);
 
-		if(previousViewDistance != minecraft.options.renderDistance) {
+		if (previousViewDistance != minecraft.options.renderDistance) {
 			horizonRenderer.close();
 			horizonRenderer = new HorizonRenderer();
 			previousViewDistance = minecraft.options.renderDistance;

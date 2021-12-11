@@ -1,5 +1,6 @@
 package net.coderbot.iris.pipeline.newshader;
 
+import net.coderbot.iris.Iris;
 import net.coderbot.iris.gl.blending.AlphaTest;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
@@ -57,6 +58,7 @@ public class NewShaderTests {
 				// TODO: Don't duplicate these definitions!
 				"        { \"name\": \"gtexture\" },\n" +
 				"        { \"name\": \"texture\" },\n" +
+				"        { \"name\": \"gtexture\" },\n" +
 				"        { \"name\": \"tex\" },\n" +
 				"        { \"name\": \"lightmap\" },\n" +
 				"        { \"name\": \"normals\" },\n" +

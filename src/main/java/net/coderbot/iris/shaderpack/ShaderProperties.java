@@ -63,8 +63,10 @@ public class ShaderProperties {
 	private final Object2ObjectMap<String, Object2BooleanMap<String>> explicitFlips = new Object2ObjectOpenHashMap<>();
 	private String noiseTexturePath = null;
 
+	private final Properties properties;
+
 	private ShaderProperties() {
-		// empty
+		properties = ImmutableProperties.of(new Properties());
 	}
 
 	// TODO: Is there a better solution than having ShaderPack pass a root path to ShaderProperties to be able to read textures?
@@ -212,6 +214,7 @@ public class ShaderProperties {
 			// TODO: Buffer size directives
 			// TODO: Conditional program enabling directives
 		});
+		this.properties = ImmutableProperties.of(properties);
 	}
 
 	private static void handleBooleanValue(String key, String value, BooleanConsumer handler) {
@@ -258,6 +261,36 @@ public class ShaderProperties {
 
 	public static ShaderProperties empty() {
 		return new ShaderProperties();
+	}
+
+	public Properties asProperties() {
+		return properties;
+	}
+
+	private static class ImmutableProperties extends Properties {
+		@Override
+		public Object setProperty(String key, String value) {
+			throw new IllegalStateException("Cannot modify ImmutableProperties");
+		}
+
+		@Override
+		public Object put(Object key, Object value) {
+			throw new IllegalStateException("Cannot modify ImmutableProperties");
+		}
+
+		private void set(Properties properties) {
+			for (String s : properties.stringPropertyNames()) {
+				super.put(s, properties.getProperty(s));
+			}
+		}
+
+		private ImmutableProperties() {}
+
+		public static ImmutableProperties of(Properties properties) {
+			ImmutableProperties i = new ImmutableProperties();
+			i.set(properties);
+			return i;
+		}
 	}
 
 	public boolean areCloudsEnabled() {

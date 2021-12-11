@@ -88,6 +88,6 @@ public abstract class MixinDebugScreenOverlay {
 
 	// From Sodium
 	private static long getNativeMemoryUsage() {
-			return ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
+		return ManagementFactory.getMemoryMXBean().getNonHeapMemoryUsage().getUsed();
 	}
 }

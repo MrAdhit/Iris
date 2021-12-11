@@ -358,6 +358,10 @@ public class DeferredWorldRenderingPipeline implements WorldRenderingPipeline {
 		useProgram(toUse);
 	}
 
+	public RenderTargets getRenderTargets() {
+		return renderTargets;
+	}
+
 	private Pass getPass(GbufferProgram program) {
 		switch (program) {
 			case TERRAIN:

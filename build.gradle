@@ -36,9 +36,9 @@ dependencies {
 	includeFabricApiModule "fabric-key-binding-api-v1"
 
 	// JUnit 5 Jupiter test engine
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.1'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 
 	// Preprocessing library used on shaders
 	modImplementation "org.anarres:jcpp:1.4.14"
@@ -54,6 +54,9 @@ if (project.sodium_compatibility == "true") {
 			content {
 				includeGroup "maven.modrinth"
 			}
+		}
+		flatDir {
+			dirs 'libs'
 		}
 	}
 

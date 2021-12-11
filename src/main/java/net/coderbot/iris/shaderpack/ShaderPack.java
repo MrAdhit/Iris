@@ -14,6 +14,10 @@ import net.coderbot.iris.shaderpack.texture.TextureStage;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
+import net.coderbot.iris.Iris;
+import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
@@ -52,6 +56,9 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
+	private final CustomTexture customNoiseTexture;
+	private final ShaderPackConfig config;
+	private final ShaderProperties shaderProperties;
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
 	private final CustomTextureData customNoiseTexture;
 
@@ -67,9 +74,13 @@ public class ShaderPack {
 		// A null path is not allowed.
 		Objects.requireNonNull(root);
 
-		ShaderProperties shaderProperties = loadProperties(root, "shaders.properties")
+		this.shaderProperties = loadProperties(root, "shaders.properties")
 			.map(ShaderProperties::new)
 			.orElseGet(ShaderProperties::empty);
+		if (Iris.getIrisConfig() != null) {
+			this.config = new ShaderPackConfig(Iris.getIrisConfig().getShaderPackName().orElse(""));
+			this.config.load();
+		} else this.config = null;
 
 		ImmutableList.Builder<AbsolutePackPath> starts = ImmutableList.builder();
 		ImmutableList<String> potentialFileNames = ShaderPackSourceNames.POTENTIAL_STARTS;
@@ -143,6 +154,7 @@ public class ShaderPack {
 				return null;
 			}
 		}).orElse(null);
+		if (this.config != null) this.config.save();
 
 		shaderProperties.getCustomTextures().forEach((textureStage, customTexturePropertiesMap) -> {
 			Object2ObjectMap<String, CustomTextureData> innerCustomTextureDataMap = new Object2ObjectOpenHashMap<>();
@@ -179,6 +191,9 @@ public class ShaderPack {
 
 		StringReader propertiesReader = new StringReader(processed);
 		Properties properties = new Properties();
+
+		if (shaderPath == null) return Optional.empty();
+
 		try {
 			// NB: ID maps are specified to be encoded with ISO-8859-1 by OptiFine,
 			//     so we don't need to do the UTF-8 workaround here.
@@ -301,6 +316,14 @@ public class ShaderPack {
 
 	public Optional<CustomTextureData> getCustomNoiseTexture() {
 		return Optional.ofNullable(customNoiseTexture);
+	}
+
+	public ShaderProperties getShaderProperties() {
+		return shaderProperties;
+	}
+
+	public ShaderPackConfig getConfig() {
+		return config;
 	}
 
 	public LanguageMap getLanguageMap() {
