@@ -56,7 +56,6 @@ public class ShaderPack {
 
 	private final IdMap idMap;
 	private final LanguageMap languageMap;
-	private final CustomTexture customNoiseTexture;
 	private final ShaderPackConfig config;
 	private final ShaderProperties shaderProperties;
 	private final Object2ObjectMap<TextureStage, Object2ObjectMap<String, CustomTextureData>> customTextureDataMap = new Object2ObjectOpenHashMap<>();
@@ -114,6 +113,15 @@ public class ShaderPack {
 
 			// Normalize version directives.
 			lines = LineTransform.apply(lines, VersionDirectiveNormalizer.INSTANCE);
+
+			// Replace option constants
+			try {
+				lines = LineTransform.apply(lines, DefineOptionParser.processConfigOptions(config));
+				lines = LineTransform.apply(lines, ConstOptionParser.processConstOptions(config));
+			} catch (Exception e) {
+				Iris.logger.error("Error while processing config options for file {}", path);
+				Iris.logger.error(e.getMessage());
+			}
 
 			StringBuilder builder = new StringBuilder();
 

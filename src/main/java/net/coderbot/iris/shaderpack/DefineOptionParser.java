@@ -1,5 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -51,16 +52,15 @@ public class DefineOptionParser {
 	private static final Pattern INTEGER_OPTION_PATTERN = Pattern.compile("(?<define>#define)\\s+(?<name>\\w+)\\s+(?<value>-?\\d+)\\s*(?<comment>(?<commentChar>//+)(?<commentContent>.*))?");
 
 
-	public static void processConfigOptions(List<String> lines, ShaderPackConfig config) {
-		for (int i = 0; i < lines.size(); i++) {
-
-			String trimmedLine = lines.get(i).trim();
+	public static LineTransform processConfigOptions(ShaderPackConfig config) {
+		return (index, line) -> {
+			String trimmedLine = line.trim();
 
 			Matcher booleanMatcher = BOOLEAN_OPTION_PATTERN.matcher(trimmedLine);
 			Matcher numberMatcher = FLOAT_INTEGER_OPTION_PATTERN.matcher(trimmedLine);
 
 			if (!booleanMatcher.matches() && !numberMatcher.matches()) {
-				continue;
+				return line;
 			}
 
 			if (booleanMatcher.matches()) {
@@ -70,18 +70,17 @@ public class DefineOptionParser {
 				String trailingComment = group(booleanMatcher, "commentContent");
 
 				if (name == null)
-					continue; //continue if the name is not apparent. Not sure how this is possible if the regex matches, but to be safe, let's ignore it
+					return line; //continue if the name is not apparent. Not sure how this is possible if the regex matches, but to be safe, let's ignore it
 
 
-				if (!containsIfDef(lines, name) || name.startsWith("MC_")) {
-					continue;
+				if (name.startsWith("MC_")) {
+					return line;
 				}
 
 
 				Option<Boolean> option = createBooleanOption(name, trailingComment, startingComment, config); // Create a boolean option and sync it with the config
 
-				lines.set(i, applyBooleanOption(option, trimmedLine, startingComment));
-
+				return applyBooleanOption(option, trimmedLine, startingComment);
 			} else if (numberMatcher.matches()) { // Matches floats and int options
 				Matcher integerMatcher = INTEGER_OPTION_PATTERN.matcher(trimmedLine); // Check if it is explicitly integer
 				if (!integerMatcher.matches()) { // If it is a float
@@ -89,15 +88,14 @@ public class DefineOptionParser {
 					String value = group(numberMatcher, "value");
 					String comment = group(numberMatcher, "commentContent");
 
-					if (name == null || value == null) continue; // If null, continue
+					if (name == null || value == null) return line; // If null, continue
 
-					if (name.startsWith("MC_")) continue;
+					if (name.startsWith("MC_")) return line;
 
 					Option<Float> floatOption = createFloatOption(name, comment, value, config);
 
 					if (floatOption != null) {
-						String line = trimmedLine.replaceFirst(value, floatOption.getValue().toString());
-						lines.set(i, line);
+						return trimmedLine.replaceFirst(value, floatOption.getValue().toString());
 					}
 
 				} else { // If it is a int option
@@ -105,22 +103,20 @@ public class DefineOptionParser {
 					String value = group(integerMatcher, "value");
 					String comment = group(integerMatcher, "commentContent");
 
-					if (name == null || value == null) continue;
+					if (name == null || value == null) return line;
 
-					if (name.startsWith("MC_")) continue;
+					if (name.startsWith("MC_")) return line;
 
 					Option<Integer> integerOption = createIntegerOption(name, comment, value, config);
 
 					if (integerOption != null) {
-						String line = trimmedLine.replaceFirst(value, integerOption.getValue().toString());
-						lines.set(i, line);
+						return trimmedLine.replaceFirst(value, integerOption.getValue().toString());
 					}
 				}
 			}
-		}
 
-		ConstOptionParser.processConstOptions(lines, config);
-
+			return line;
+		};
 	}
 
 	/**
@@ -260,7 +256,6 @@ public class DefineOptionParser {
 	 * @param name    name of the group
 	 * @return the string representation of that group or null if that name is not in the group or error while parsing groups
 	 * @see Matcher#group(String)
-	 * @see Matcher#getMatchedGroupIndex(String)  this throws the exception that we catch
 	 */
 	static String group(Matcher matcher, String name) {
 		try {
