@@ -5,9 +5,8 @@ import me.jellysquid.mods.sodium.client.gl.shader.*;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderBindingPoints;
-import me.jellysquid.mods.sodium.client.render.chunk.shader.ChunkShaderOptions;
 import net.coderbot.iris.Iris;
-import net.coderbot.iris.compat.sodium.impl.vertex_format.IrisModelVertexFormats;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.gl.framebuffer.GlFramebuffer;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
@@ -96,11 +95,24 @@ public class IrisChunkProgramOverrides {
         return new GlShader(ShaderType.FRAGMENT, new ResourceLocation("iris", "sodium-terrain.fsh"), source);
     }
 
+	private BlendModeOverride getBlendOverride(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
+		if (pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT) {
+			return pipeline.getShadowBlendOverride();
+		} else if (pass == IrisTerrainPass.GBUFFER_SOLID || pass == IrisTerrainPass.GBUFFER_CUTOUT) {
+			return pipeline.getTerrainBlendOverride();
+		} else if (pass == IrisTerrainPass.GBUFFER_TRANSLUCENT) {
+			return pipeline.getTranslucentBlendOverride();
+		} else {
+			throw new IllegalArgumentException("Unknown pass type " + pass);
+		}
+	}
+
     @Nullable
     private GlProgram<IrisChunkShaderInterface> createShader(IrisTerrainPass pass, SodiumTerrainPipeline pipeline) {
         GlShader vertShader = createVertexShader(pass, pipeline);
         GlShader geomShader = createGeometryShader(pass, pipeline);
         GlShader fragShader = createFragmentShader(pass, pipeline);
+		BlendModeOverride blendOverride = getBlendOverride(pass, pipeline);
 
         if (vertShader == null || fragShader == null) {
             if (vertShader != null) {
@@ -144,7 +156,7 @@ public class IrisChunkProgramOverrides {
 						ShaderBindingContextExt contextExt = (ShaderBindingContextExt) shader;
 
 						return new IrisChunkShaderInterface(handle, contextExt, pipeline,
-								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT);
+								pass == IrisTerrainPass.SHADOW || pass == IrisTerrainPass.SHADOW_CUTOUT, blendOverride);
 					});
         } finally {
             vertShader.delete();
@@ -156,7 +168,7 @@ public class IrisChunkProgramOverrides {
     }
 
     private SodiumTerrainPipeline getSodiumTerrainPipeline() {
-		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline worldRenderingPipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (worldRenderingPipeline != null) {
 			return worldRenderingPipeline.getSodiumTerrainPipeline();

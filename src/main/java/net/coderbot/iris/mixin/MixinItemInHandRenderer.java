@@ -23,10 +23,10 @@ public class MixinItemInHandRenderer {
 	@Shadow @Final private Minecraft minecraft;
 
 	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
-	private void skipTranslucentHands(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float h, ItemStack itemStack, float i, PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
+	private void iris$skipTranslucentHands(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float h, ItemStack itemStack, float i, PoseStack poseStack, MultiBufferSource multiBufferSource, int j, CallbackInfo ci) {
 		if (this.minecraft.screen instanceof HudHideable) ci.cancel();
 
-		if (!(Iris.getPipelineManager().getPipeline() instanceof FixedFunctionWorldRenderingPipeline)) {
+		if (!(Iris.getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline)) {
 			if (HandRenderer.INSTANCE.isRenderingSolid() && HandRenderer.INSTANCE.isHandTranslucent(interactionHand)) {
 				ci.cancel();
 			} else if (!HandRenderer.INSTANCE.isRenderingSolid() && !HandRenderer.INSTANCE.isHandTranslucent(interactionHand)) {

@@ -3,6 +3,7 @@ package net.coderbot.iris.mixin;
 import com.mojang.blaze3d.platform.GlUtil;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
 import net.coderbot.iris.gui.screen.HudHideable;
 import net.coderbot.iris.layer.GbufferPrograms;
 import net.coderbot.iris.pipeline.FixedFunctionWorldRenderingPipeline;
@@ -11,6 +12,14 @@ import net.coderbot.iris.pipeline.ShadowRenderer;
 import net.coderbot.iris.pipeline.WorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.CoreWorldRenderingPipeline;
 import net.coderbot.iris.pipeline.newshader.WorldRenderingPhase;
+
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -20,6 +29,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.client.renderer.RenderBuffers;
+import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Final;
@@ -62,7 +72,7 @@ public class MixinGameRenderer {
 
 	@Redirect(method = "renderItemInHand", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"))
 	private void disableVanillaHandRendering(ItemInHandRenderer itemInHandRenderer, float tickDelta, PoseStack poseStack, BufferSource bufferSource, LocalPlayer localPlayer, int light) {
-		if (!(Iris.getPipelineManager().getPipeline() instanceof FixedFunctionWorldRenderingPipeline)) {
+		if (!(Iris.getPipelineManager().getPipelineNullable() instanceof FixedFunctionWorldRenderingPipeline)) {
 			return;
 		}
 
@@ -224,7 +234,7 @@ public class MixinGameRenderer {
 			"getRendertypeArmorEntityGlintShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideGlintShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (isRenderingWorld()) {
+		if(isRenderingWorld()) {
 			override(CoreWorldRenderingPipeline::getGlint, cir);
 		}
 	}
@@ -336,7 +346,7 @@ public class MixinGameRenderer {
 			"getRendertypeEndPortalShader"
 	}, at = @At("HEAD"), cancellable = true)
 	private static void iris$overrideEndPortalShader(CallbackInfoReturnable<ShaderInstance> cir) {
-		if (!ShadowRenderer.ACTIVE) {
+		if(!ShadowRenderer.ACTIVE) {
 			override(CoreWorldRenderingPipeline::getBlock, cir);
 		}
 	}
@@ -353,7 +363,7 @@ public class MixinGameRenderer {
 	}
 
 	private static boolean isPhase(WorldRenderingPhase phase) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() == phase;
@@ -363,7 +373,7 @@ public class MixinGameRenderer {
 	}
 
 	private static boolean isRenderingWorld() {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			return ((CoreWorldRenderingPipeline) pipeline).getPhase() != WorldRenderingPhase.NOT_RENDERING_WORLD;
@@ -373,7 +383,7 @@ public class MixinGameRenderer {
 	}
 
 	private static void override(Function<CoreWorldRenderingPipeline, ShaderInstance> getter, CallbackInfoReturnable<ShaderInstance> cir) {
-		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipeline();
+		WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
 
 		if (pipeline instanceof CoreWorldRenderingPipeline) {
 			ShaderInstance override = getter.apply(((CoreWorldRenderingPipeline) pipeline));

@@ -1,5 +1,6 @@
 package net.coderbot.iris.shaderpack;
 
+import net.coderbot.iris.shaderpack.transform.line.LineTransform;
 import net.minecraft.Util;
 
 import java.util.Arrays;
@@ -59,16 +60,16 @@ public class ConstOptionParser {
 	});
 
 
-	public static void processConstOptions(List<String> lines, ShaderPackConfig config) {
-		for (int i = 0; i < lines.size(); i++) {
-			String trimmedLine = lines.get(i).trim();
+	public static LineTransform processConstOptions(ShaderPackConfig config) {
+		return (index, line) -> {
+			String trimmedLine = line.trim();
 
 			Matcher booleanMatcher = CONST_BOOLEAN_PATTERN.matcher(trimmedLine);
 			Matcher floatMatcher = CONST_FLOAT_PATTERN.matcher(trimmedLine);
 			Matcher intMatcher = CONST_INT_PATTERN.matcher(trimmedLine);
 
 			if (!booleanMatcher.matches() && !floatMatcher.matches() && !intMatcher.matches()) {
-				continue;
+				return line;
 			}
 
 			if (booleanMatcher.matches()) {
@@ -77,31 +78,31 @@ public class ConstOptionParser {
 				String comment = group(booleanMatcher, "commentContent");
 
 				if (name == null || value == null)
-					continue; //not sure how this is possible since the regex matches, but to be safe we will ignore it
+					return line; //not sure how this is possible since the regex matches, but to be safe we will ignore it
 
 				if (!CONST_VARIABLE_NAMES.contains(name)) {
-					continue;
+					return line;
 				}
 
 				Option<Boolean> booleanOption = createConstBooleanOption(name, value, comment, config);
 
-				lines.set(i, trimmedLine.replaceFirst(value, booleanOption.getValue().toString()));
+				return trimmedLine.replaceFirst(value, booleanOption.getValue().toString());
 			} else if (floatMatcher.matches()) {
 				String name = group(floatMatcher, "name");
 				String value = group(floatMatcher, "value");
 				String comment = group(floatMatcher, "commentContent");
 
 				if (name == null || value == null)
-					continue; //not sure how this is possible since the regex matches, but to be safe we will ignore it
+					return line; //not sure how this is possible since the regex matches, but to be safe we will ignore it
 
 				if (!CONST_VARIABLE_NAMES.contains(name)) {
-					continue;
+					return line;
 				}
 
 				Option<Float> floatOption = createFloatOption(name, comment, value, config);
 
 				if (floatOption != null) {
-					lines.set(i, trimmedLine.replaceFirst(value, floatOption.getValue().toString()));
+					return trimmedLine.replaceFirst(value, floatOption.getValue().toString());
 				}
 
 			} else if (intMatcher.matches()) {
@@ -110,19 +111,21 @@ public class ConstOptionParser {
 				String comment = group(intMatcher, "commentContent");
 
 				if (name == null || value == null)
-					continue; //not sure how this is possible since the regex matches, but to be safe we will ignore it
+					return line; //not sure how this is possible since the regex matches, but to be safe we will ignore it
 
 				if (!CONST_VARIABLE_NAMES.contains(name)) {
-					continue;
+					return line;
 				}
 
 				Option<Integer> integerOption = createIntegerOption(name, comment, value, config);
 
 				if (integerOption != null) {
-					lines.set(i, trimmedLine.replaceFirst(value, integerOption.getValue().toString()));
+					return trimmedLine.replaceFirst(value, integerOption.getValue().toString());
 				}
 			}
-		}
+
+			return line;
+		};
 	}
 
 	private static Option<Boolean> createConstBooleanOption(String name, String value, String comment, ShaderPackConfig config) {

@@ -39,18 +39,29 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
 	testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.1'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+	// Preprocessing library used on shaders
+	modImplementation "org.anarres:jcpp:1.4.14"
+	include "org.anarres:jcpp:1.4.14"
+	include 'org.slf4j:slf4j-api:1.7.12'
 }
 
 if (project.sodium_compatibility == "true") {
 	repositories {
+		maven {
+			name = "Modrinth"
+			url = "https://api.modrinth.com/maven"
+			content {
+				includeGroup "maven.modrinth"
+			}
+		}
 		flatDir {
 			dirs 'libs'
 		}
 	}
 
 	dependencies {
-		// Temporary, while official Sodium doesn't exist for 1.18.
-		modImplementation name: project.sodium_jar
+		modImplementation name: project.sodium_jar //"maven.modrinth:sodium:" + project.sodium_version
 		implementation "org.joml:joml:1.10.2"
 		modImplementation fabricApi.module("fabric-rendering-data-attachment-v1", project.fabric_version)
 		modImplementation fabricApi.module("fabric-rendering-fluids-v1", project.fabric_version)
@@ -187,7 +198,7 @@ jar {
 	if (project.sodium_compatibility == "true") {
 		from (sourceSets.sodiumCompatibility.output) {
 			it.filesMatching("*refmap.json") {
-				FileCopyDetails details -> {
+				details -> {
 					details.name("iris-sodium-compat-refmap.json")
 				}
 			}
