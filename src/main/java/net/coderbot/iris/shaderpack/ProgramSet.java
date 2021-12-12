@@ -1,6 +1,7 @@
 package net.coderbot.iris.shaderpack;
 
 import net.coderbot.iris.Iris;
+import net.coderbot.iris.gl.blending.BlendModeOverride;
 import net.coderbot.iris.shaderpack.include.AbsolutePackPath;
 
 import java.util.ArrayList;
@@ -49,48 +50,59 @@ public class ProgramSet {
 		this.packDirectives = new PackDirectives(PackRenderTargetDirectives.BASELINE_SUPPORTED_RENDER_TARGETS, shaderProperties);
 		this.pack = pack;
 
-		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, pack);
+		// Note: Ensure that blending is properly overridden during the shadow pass. By default, blending is disabled
+		//       in the shadow pass. Shader packs expect this for colored shadows from stained glass and nether portals
+		//       to work properly.
+		//
+		// Note: Enabling blending in the shadow pass results in weird results since translucency sorting happens
+		//       relative to the player camera, not the shadow camera, so we can't rely on chunks being properly
+		//       sorted in the shadow pass.
+		//
+		// - https://github.com/IrisShaders/Iris/issues/483
+		// - https://github.com/IrisShaders/Iris/issues/987
+		this.shadow = readProgramSource(directory, sourceProvider, "shadow", this, shaderProperties,
+				BlendModeOverride.OFF);
 
-		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", pack);
-		this.prepare = readProgramArray(directory, sourceProvider, "prepare", pack);
+		this.shadowcomp = readProgramArray(directory, sourceProvider, "shadowcomp", shaderProperties);
+		this.prepare = readProgramArray(directory, sourceProvider, "prepare", shaderProperties);
 
-		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, pack);
-		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, pack);
-		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, pack);
-		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, pack);
-		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, pack);
-		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, pack);
-		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, pack);
-		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, pack);
-		this.gbuffersClouds = readProgramSource(directory, sourceProvider, "gbuffers_clouds", this, pack);
-		this.gbuffersWeather = readProgramSource(directory, sourceProvider, "gbuffers_weather", this, pack);
-		this.gbuffersEntities = readProgramSource(directory, sourceProvider, "gbuffers_entities", this, pack);
-		this.gbuffersEntitiesGlowing = readProgramSource(directory, sourceProvider, "gbuffers_entities_glowing", this, pack);
-		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, pack);
-		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, pack);
-		this.gbuffersBlock = readProgramSource(directory, sourceProvider, "gbuffers_block", this, pack);
-		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, pack);
+		this.gbuffersBasic = readProgramSource(directory, sourceProvider, "gbuffers_basic", this, shaderProperties);
+		this.gbuffersBeaconBeam = readProgramSource(directory, sourceProvider, "gbuffers_beaconbeam", this, shaderProperties);
+		this.gbuffersTextured = readProgramSource(directory, sourceProvider, "gbuffers_textured", this, shaderProperties);
+		this.gbuffersTexturedLit = readProgramSource(directory, sourceProvider, "gbuffers_textured_lit", this, shaderProperties);
+		this.gbuffersTerrain = readProgramSource(directory, sourceProvider, "gbuffers_terrain", this, shaderProperties);
+		this.gbuffersDamagedBlock = readProgramSource(directory, sourceProvider, "gbuffers_damagedblock", this, shaderProperties);
+		this.gbuffersSkyBasic = readProgramSource(directory, sourceProvider, "gbuffers_skybasic", this, shaderProperties);
+		this.gbuffersSkyTextured = readProgramSource(directory, sourceProvider, "gbuffers_skytextured", this, shaderProperties);
+		this.gbuffersClouds = readProgramSource(directory, sourceProvider, "gbuffers_clouds", this, shaderProperties);
+		this.gbuffersWeather = readProgramSource(directory, sourceProvider, "gbuffers_weather", this, shaderProperties);
+		this.gbuffersEntities = readProgramSource(directory, sourceProvider, "gbuffers_entities", this, shaderProperties);
+		this.gbuffersEntitiesGlowing = readProgramSource(directory, sourceProvider, "gbuffers_entities_glowing", this, shaderProperties);
+		this.gbuffersGlint = readProgramSource(directory, sourceProvider, "gbuffers_armor_glint", this, shaderProperties);
+		this.gbuffersEntityEyes = readProgramSource(directory, sourceProvider, "gbuffers_spidereyes", this, shaderProperties);
+		this.gbuffersBlock = readProgramSource(directory, sourceProvider, "gbuffers_block", this, shaderProperties);
+		this.gbuffersHand = readProgramSource(directory, sourceProvider, "gbuffers_hand", this, shaderProperties);
 
-		this.deferred = readProgramArray(directory, sourceProvider, "deferred", pack);
+		this.deferred = readProgramArray(directory, sourceProvider, "deferred", shaderProperties);
 
-		this.gbuffersWater = readProgramSource(directory, sourceProvider, "gbuffers_water", this, pack);
-		this.gbuffersHandWater = readProgramSource(directory, sourceProvider, "gbuffers_hand_water", this, pack);
+		this.gbuffersWater = readProgramSource(directory, sourceProvider, "gbuffers_water", this, shaderProperties);
+		this.gbuffersHandWater = readProgramSource(directory, sourceProvider, "gbuffers_hand_water", this, shaderProperties);
 
-		this.composite = readProgramArray(directory, sourceProvider, "composite", pack);
-		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, pack);
+		this.composite = readProgramArray(directory, sourceProvider, "composite", shaderProperties);
+		this.compositeFinal = readProgramSource(directory, sourceProvider, "final", this, shaderProperties);
 
 		locateDirectives();
 	}
 
 	private ProgramSource[] readProgramArray(AbsolutePackPath directory,
 											 Function<AbsolutePackPath, String> sourceProvider, String name,
-											 ShaderPack pack) {
+											 ShaderProperties properties) {
 		ProgramSource[] programs = new ProgramSource[16];
 
 		for (int i = 0; i < programs.length; i++) {
 			String suffix = i == 0 ? "" : Integer.toString(i);
 
-			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, pack);
+			programs[i] = readProgramSource(directory, sourceProvider, name + suffix, this, properties);
 		}
 
 		return programs;
@@ -243,7 +255,14 @@ public class ProgramSet {
 
 	private static ProgramSource readProgramSource(AbsolutePackPath directory,
 												   Function<AbsolutePackPath, String> sourceProvider, String program,
-												   ProgramSet programSet, ShaderPack pack) {
+												   ProgramSet programSet, ShaderProperties properties) {
+		return readProgramSource(directory, sourceProvider, program, programSet, properties, null);
+	}
+
+	private static ProgramSource readProgramSource(AbsolutePackPath directory,
+												   Function<AbsolutePackPath, String> sourceProvider, String program,
+												   ProgramSet programSet, ShaderProperties properties,
+												   BlendModeOverride defaultBlendModeOverride) {
 		AbsolutePackPath vertexPath = directory.resolve(program + ".vsh");
 		String vertexSource = sourceProvider.apply(vertexPath);
 
@@ -253,6 +272,7 @@ public class ProgramSet {
 		AbsolutePackPath fragmentPath = directory.resolve(program + ".fsh");
 		String fragmentSource = sourceProvider.apply(fragmentPath);
 
-		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, pack.getShaderProperties());
+		return new ProgramSource(program, vertexSource, geometrySource, fragmentSource, programSet, properties,
+				defaultBlendModeOverride);
 	}
 }

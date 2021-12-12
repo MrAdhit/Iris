@@ -53,7 +53,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL20;
@@ -81,7 +81,7 @@ public class ShadowRenderer implements ShadowMapRenderer {
 	private final ShadowRenderTargets targets;
 
 	//private final Program shadowProgram;
-	@NotNull
+	@Nullable
 	private final BlendModeOverride blendModeOverride;
 	private final OptionalBoolean packCullingState;
 	private final boolean packHasVoxelization;
@@ -141,26 +141,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 		this.noise = noise;
 		this.customTextureIds = customTextureIds;
 
-		// Note: Ensure that blending is properly overridden during the shadow pass. By default, blending is disabled
-		//       in the shadow pass. Shader packs expect this for colored shadows from stained glass and nether portals
-		//       to work properly.
-		//
-		// Note: Enabling blending in the shadow pass results in weird results since translucency sorting happens
-		//       relative to the player camera, not the shadow camera, so we can't rely on chunks being properly
-		//       sorted in the shadow pass.
-		//
-		// - https://github.com/IrisShaders/Iris/issues/483
-		// - https://github.com/IrisShaders/Iris/issues/987
-		BlendModeOverride blendModeOverride;
-
 		if (shadow != null) {
 			//this.shadowProgram = createProgram(shadow, directives, flipped);
 
-			blendModeOverride = shadow.getDirectives().getBlendModeOverride();
-
-			if (blendModeOverride == null) {
-				blendModeOverride = BlendModeOverride.OFF;
-			}
+			// Note: ProgramSet handles defaulting this to "OFF" on the shadow program.
+			this.blendModeOverride = shadow.getDirectives().getBlendModeOverride();
 
 			// Assume that the shader pack is doing voxelization if a geometry shader is detected.
 			// TODO: Check for image load / store too once supported.
@@ -168,12 +153,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 			this.packCullingState = shadow.getParent().getPackDirectives().getCullingState();
 		} else {
 			//this.shadowProgram = null;
-			blendModeOverride = BlendModeOverride.OFF;
+			this.blendModeOverride = BlendModeOverride.OFF;
 			this.packHasVoxelization = false;
 			this.packCullingState = OptionalBoolean.DEFAULT;
 		}
-
-		this.blendModeOverride = blendModeOverride;
 
 		ProgramSource[] composite = programSet.getComposite();
 
@@ -353,9 +336,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 				reason = "(indirect sunlight GI detected)";
 			}
 
-			if (distance <= 0 || distance > Minecraft.getInstance().options.renderDistance * 16) {
-				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
-						+ " blocks (capped by normal render distance)";
+			if (distance <= 0 || distance > Minecraft.getInstance().options.getEffectiveRenderDistance() * 16) {
+				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
+						+ " blocks ";
+				debugStringShadowDistance += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
 				debugStringShadowCulling = "disabled " + reason;
 				return new NonCullingFrustum();
 			} else {
@@ -375,9 +359,10 @@ public class ShadowRenderer implements ShadowMapRenderer {
 				setter = "(set by user)";
 			}
 
-			if (distance >= Minecraft.getInstance().options.renderDistance * 16) {
-				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.renderDistance * 16
-						+ " blocks (capped by normal render distance)";
+			if (distance >= Minecraft.getInstance().options.getEffectiveRenderDistance() * 16) {
+				debugStringShadowDistance = "render distance = " + Minecraft.getInstance().options.getEffectiveRenderDistance() * 16
+						+ " blocks ";
+				debugStringShadowDistance += Minecraft.getInstance().isLocalServer() ? "(capped by normal render distance)" : "(capped by normal/server render distance)";
 				boxCuller = null;
 			} else {
 				debugStringShadowDistance = "render distance = " + distance + " blocks " + setter;
@@ -406,7 +391,11 @@ public class ShadowRenderer implements ShadowMapRenderer {
 
 	@Override
 	public void renderShadows(LevelRendererAccessor levelRenderer, Camera playerCamera) {
-		blendModeOverride.apply();
+		if (blendModeOverride != null) {
+			blendModeOverride.apply();
+		} else {
+			BlendModeOverride.restore();
+		}
 
 		Minecraft client = Minecraft.getInstance();
 
