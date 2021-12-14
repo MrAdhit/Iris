@@ -4,10 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import me.jellysquid.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformBlock;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat;
-import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformFloat3v;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniformMatrix4f;
 import me.jellysquid.mods.sodium.client.model.vertex.type.ChunkVertexType;
 import net.coderbot.iris.gl.blending.BlendModeOverride;
+import net.coderbot.iris.gl.program.ProgramImages;
 import net.coderbot.iris.gl.program.ProgramSamplers;
 import net.coderbot.iris.gl.program.ProgramUniforms;
 import net.coderbot.iris.pipeline.SodiumTerrainPipeline;
@@ -21,7 +21,7 @@ public class IrisChunkShaderInterface {
 	@Nullable
 	private final GlUniformMatrix4f uniformProjectionMatrix;
 	@Nullable
-	private final GlUniformFloat3v uniformRegionOffset;
+	private final GlUniformMatrix4f uniformModelViewProjectionMatrix;
 	@Nullable
 	private final GlUniformMatrix4f uniformNormalMatrix;
 	@Nullable
@@ -31,12 +31,13 @@ public class IrisChunkShaderInterface {
 	private final IrisShaderFogComponent fogShaderComponent;
 	private final ProgramUniforms irisProgramUniforms;
 	private final ProgramSamplers irisProgramSamplers;
+	private final ProgramImages irisProgramImages;
 
 	public IrisChunkShaderInterface(int handle, ShaderBindingContextExt contextExt, SodiumTerrainPipeline pipeline,
 									boolean isShadowPass, BlendModeOverride blendModeOverride) {
 		this.uniformModelViewMatrix = contextExt.bindUniformIfPresent("u_ModelViewMatrix", GlUniformMatrix4f::new);
 		this.uniformProjectionMatrix = contextExt.bindUniformIfPresent("u_ProjectionMatrix", GlUniformMatrix4f::new);
-		this.uniformRegionOffset = contextExt.bindUniformIfPresent("u_RegionOffset", GlUniformFloat3v::new);
+		this.uniformModelViewProjectionMatrix = contextExt.bindUniformIfPresent("u_ModelViewProjectionMatrix", GlUniformMatrix4f::new);
 		this.uniformNormalMatrix = contextExt.bindUniformIfPresent("u_NormalMatrix", GlUniformMatrix4f::new);
 		this.uniformBlockDrawParameters = contextExt.bindUniformBlockIfPresent("ubo_DrawParameters", 0);
 
@@ -46,6 +47,7 @@ public class IrisChunkShaderInterface {
 		this.irisProgramUniforms = pipeline.initUniforms(handle);
 		this.irisProgramSamplers
 				= isShadowPass? pipeline.initShadowSamplers(handle) : pipeline.initTerrainSamplers(handle);
+		this.irisProgramImages = isShadowPass ? pipeline.initShadowImages(handle) : pipeline.initTerrainImages(handle);
 	}
 
 	public void setup() {
@@ -62,6 +64,7 @@ public class IrisChunkShaderInterface {
 		fogShaderComponent.setup();
 		irisProgramUniforms.update();
 		irisProgramSamplers.update();
+		irisProgramImages.update();
 	}
 
 	public void restore() {
@@ -87,10 +90,6 @@ public class IrisChunkShaderInterface {
 			normalMatrix.transpose();
 			this.uniformNormalMatrix.set(normalMatrix);
 		}
-	}
-
-	public void setRegionOffset(float x, float y, float z) {
-		this.uniformRegionOffset.set(x, y, z);
 	}
 
 	public void setDrawUniforms(GlMutableBuffer buffer) {

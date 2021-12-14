@@ -133,17 +133,18 @@ public class TriforceSodiumPatcher {
 		transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define gl_ModelViewProjectionMatrix (u_ProjectionMatrix * u_ModelViewMatrix)");
 
 		if (type == ShaderType.VERTEX) {
-			// TODO: this breaks Vaporwave-Shaderpack since it expects that vertex positions will be aligned to chunks.
-			transformations.define("gl_Vertex", "getVertexPosition()");
+			// TODO: Vaporwave-Shaderpack expects that vertex positions will be aligned to chunks.
+
+			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
+			transformations.define("VERT_POS_SCALE", String.valueOf(vertexType.getPositionScale()));
+			transformations.define("VERT_POS_OFFSET", String.valueOf(vertexType.getPositionOffset()));
+			transformations.define("VERT_TEX_SCALE", String.valueOf(vertexType.getTextureScale()));
 
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_vertex.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_parameters.glsl>"));
 			transformations.injectLine(Transformations.InjectionPoint.DEFINES, parseSodiumImport("#import <sodium:include/chunk_matrices.glsl>"));
-			transformations.injectLine(Transformations.InjectionPoint.DEFINES, "#define USE_VERTEX_COMPRESSION");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 u_RegionOffset;");
-			transformations.define("VERT_POS_SCALE", String.valueOf(vertexType.getPositionScale()));
-			transformations.define("VERT_POS_OFFSET", String.valueOf(vertexType.getPositionOffset()));
-			transformations.define("VERT_TEX_SCALE", String.valueOf(vertexType.getTextureScale()));
+
+			transformations.define("gl_Vertex", "getVertexPosition()");
 
 			if (transformations.contains("irisMain")) {
 				throw new IllegalStateException("Shader already contains \"irisMain\"???");
@@ -158,12 +159,11 @@ public class TriforceSodiumPatcher {
 					"	irisMain();\n" +
 					"}");
 
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(u_RegionOffset + _draw_translation + _vert_position, 1.0); }");
+			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 getVertexPosition() { return vec4(_draw_translation + _vert_position, 1.0); }");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "vec4 ftransform() { return gl_ModelViewProjectionMatrix * gl_Vertex; }");
 		} else {
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ModelViewMatrix;");
 			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform mat4 u_ProjectionMatrix;");
-			transformations.injectLine(Transformations.InjectionPoint.BEFORE_CODE, "uniform vec3 u_RegionOffset;");
 		}
 
 		if (type == ShaderType.VERTEX) {
