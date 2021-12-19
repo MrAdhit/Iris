@@ -29,6 +29,7 @@ public class ExternallyManagedUniforms {
 		addFloat(uniformHolder, "u_FogEnd");
 		addVec4(uniformHolder, "u_FogColor");
 		addMat4(uniformHolder, "u_ProjectionMatrix");
+		addVec3(uniformHolder, "u_RegionOffset");
 		addFloat(uniformHolder, "u_TextureScale");
 		addFloat(uniformHolder, "u_ModelScale");
 		addFloat(uniformHolder, "u_ModelOffset");
@@ -50,6 +51,10 @@ public class ExternallyManagedUniforms {
 
 	private static void addMat4(UniformHolder uniformHolder, String name) {
 		uniformHolder.externallyManagedUniform(name, UniformType.MAT4);
+	}
+
+	private static void addVec3(UniformHolder uniformHolder, String name) {
+		uniformHolder.externallyManagedUniform(name, UniformType.VEC3);
 	}
 
 	private static void addVec4(UniformHolder uniformHolder, String name) {
