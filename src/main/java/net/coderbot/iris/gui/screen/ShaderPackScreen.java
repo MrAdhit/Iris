@@ -33,7 +33,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -242,10 +241,13 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 		String name = entry.getPackName();
 		boolean changed = this.shaderProperties.saveProperties();
-		if (config.areShadersEnabled() == this.shaderPackList.getEnableShadersButton().enabled && name.equals(config.getShaderPackName().orElse("")) && !changed) return;
+		boolean buttonEnabled = this.shaderPackList.getEnableShadersButton().enabled;
+		if (config.areShadersEnabled() == buttonEnabled && name.equals(config.getShaderPackName().orElse("")) && !changed) return;
 
 		config.setShaderPackName(name);
-		config.setShadersEnabled(this.shaderPackList.getEnableShadersButton().enabled);
+		// Not using IrisApi.getInstance().getConfig().setShadersEnabledAndApply due to its lack of sending a message to the user in chat notifying them of the failure to compile
+		// IrisApi.getInstance().getConfig().setShadersEnabledAndApply(buttonEnabled);
+		config.setShadersEnabled(buttonEnabled);
 
 		try {
 			config.save();
@@ -262,14 +264,6 @@ public class ShaderPackScreen extends Screen implements HudHideable {
 
 			if (this.minecraft.player != null) {
 				this.minecraft.player.displayClientMessage(new TranslatableComponent("iris.shaders.reloaded.failure", Throwables.getRootCause(e).getMessage()).withStyle(ChatFormatting.RED), false);
-			}
-
-			Iris.getIrisConfig().setShadersEnabled(false);
-			try {
-				Iris.getIrisConfig().save();
-			} catch (IOException ex) {
-				Iris.logger.error("Error saving configuration file!");
-				Iris.logger.catching(ex);
 			}
 		}
 		this.reloadShaderConfig();
